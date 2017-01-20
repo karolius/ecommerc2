@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+
+<script>
+    {% block jquery %}
+
+        {# Updating quantity #}
+        $(".item-qty").change(function () {
+            var item = $(this).prev("input[type='hidden']").val();
+            var qty = $(this).val();
+            var data = {
+                item: item,
+                qty: qty
+            };
+            console.log(data);
+
+            $.ajax({
+                type: "GET",
+                url: "{% url 'cart' %}",
+                data: data,
+
+                success: function (data) {
+                    $("#jquery-message").text("Added " + data.item_added
+                        + " Deleted " + data.deleted);
+
+                    $("#subtotal").text(+data.subtotal);
+                    if (data.deleted){
+                        $("#item-"+item).fadeOut();
+                    } else {
+                        $("#item-line-total-"+item).text(data.line_total);
+                        $("#tax-total").text(data.tax_total);
+                        $("#total").text(data.total);
+                    }
+
+                    if (data.total_items == 0) {
+                        $(".table").fadeOut();
+                        var template = "{% include 'carts/empty_cart.html' %}";
+                        $(".main-content").html(template);
+                    }
+
+                    showFlashMessage(data.flash_message);
+                    updateCartItemCount();
+                },
+                error: function () {
+                    $("#add-form").submit()
+                }
+            })
+        });
+    {% endblock %}
+</script>
+
+
+{% block content %}
+    <h3>{{ object }}</h3>
+    <div class="row main-content">
+        {% if object.cartitem_set.count < 1 %}
+            {% include "carts/empty_cart.html" %}
+        {% else %}
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Product name</th>
+                    <th>Price for unit</th>
+                    <th></th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for item in object.cartitem_set.all %}
+                    <tr id="item-{{ item.item.id }}">
+                        <td>
+                            {{ item.item.get_title }}
+
+                        </td>
+                        <td>
+                            {{ item.item.get_price }}
+                        </td>
+                        <td> x </td>
+                        <td>
+                            <form method="GET" action=".">
+                                <input type="hidden" name="item" value="{{ item.item.id }}" />
+                                <input class="item-qty" type="number" name="qty"
+                                       value="{{ item.quantity }}" />
+                                <input class="btn-update btn btn-link" type="submit"
+                                       value="Update Item" style="display: none;"/>
+                            </form>
+                        </td>
+                        <td id="item-line-total-{{ item.item.id }}">
+                            {{ item.line_item_total }}
+                        </td>
+                        <td class="text-right">
+                            <a href="{{ item.remove }}">X</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                <tr>
+                    <td colspan="4" class="text-right">
+                        Subtotal:
+                    </td>
+                    <td class="text-right">
+                        <span id="subtotal">{{ object.subtotal }}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="4" class="text-right">
+                        Taxes:
+                    </td>
+                    <td class="text-right">
+                        <span id="tax-total">{{ object.tax_total }}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="4" class="text-right">
+                        Total price:
+                    </td>
+                    <td class="text-right">
+                        <span id="total">{{ object.total }}</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}

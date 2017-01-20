@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+
+{% block content %}
+
+    <table class="table lead">
+        {% for obj in object_list %}
+            <tr>
+                <td>
+                    <a href="{{ obj.get_absolute_url }}">{{ obj.title }}</a>
+                </td>
+                <td>{{ obj.inventory_size }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+
+    <form method="POST" action="">
+        {% csrf_token %}
+        {{ formset.management_form }}
+
+        {% for form in formset %}
+            <p class="lead">{{ form.instance.title }}</p>
+            {{ form|crispy }}
+            <hr />
+        {% endfor %}
+        <input type="submit" value="Update" class="btn" />
+    </form>
+{% endblock %}

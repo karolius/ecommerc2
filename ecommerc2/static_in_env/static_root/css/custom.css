@@ -1,0 +1,24 @@
+.text-align-center {
+	text-align: center;
+}
+.og-price {
+	color: #413F5D;
+	text-decoration:line-through;
+}
+.jumbotron {
+	background-color: #413F5D;
+	color: #D7D7DA;
+}
+.fa-navbar-cart {
+	font-size: 18px;
+	vertical-align: middle;
+}
+.container-alert-flash {
+	position: absolute;
+	top: 10px;
+	z-index: 50000;
+	width: 100%;
+	right: 0;
+	margin: 0;
+	display: none;
+}

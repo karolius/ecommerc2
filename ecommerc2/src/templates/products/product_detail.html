@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+
+<script>
+    {% block jquery %}
+        function setPrice(){
+            var funCom = ".variation-select option:selected";
+            var price = $(funCom).attr("data-price");
+            var sale_price = $(funCom).attr("data-sale-price");
+
+            if (sale_price!="" && sale_price!="None" && sale_price!=null) {
+                $("#price").html("<h3>" + sale_price + " <small class='og-price'>"
+                    + price + "</small></h3>");
+            } else {
+                $("#price").html(price);
+            }
+        }
+
+        setPrice();
+        $(".variation-select").change(function () {
+            setPrice()
+        });
+
+
+        {# Ajax add to cart #}
+        $("#submit-btn").click(function (event) {
+            event.preventDefault();
+            var formData = $("#add-form").serialize();
+            console.log(formData);
+
+            $.ajax({
+                type: "GET",
+                url: "{% url 'cart' %}",
+                data: formData,
+
+                success: function (data) {
+                    showFlashMessage(data.flash_message);
+                    updateCartItemCount()
+                },
+                error: function () {
+                    $("#add-form").submit()
+                }
+            })
+        });
+    {% endblock %}
+</script>
+
+
+{% block content %}
+
+
+
+    <div class="row">
+        <div class="col-sm-8">
+            <h2>{{ object.title }}</h2>
+
+            {% if object.productimage_set.count > 0 %}
+                <div>
+                    {% for obj_img in object.productimage_set.all %}
+                        <img id="img" class="img-responsive" src="{{ obj_img.image.url }}">
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <p class="lead">{{ object.description }}</p>
+        </div>
+
+
+        <!-- Product Sidebar -->
+        <div class="col-sm-4">
+            <form id="add-form" method="GET" action="{% url 'cart' %}">
+                <p id="jquery-message" class="lead"></p>
+                {% if object.variation_set.count > 1 %}
+                    <h3 id="price">{{ object.variation_set.first.price }}</h3>
+
+                    <select name="item" class="form-control variation-select">
+                        {% for obj_vari in object.variation_set.all %}
+                            {# <option data-img="" ... #}
+                            <option data-sale-price="{{ obj_vari.sale_price }}"
+                                    data-price="{{ obj_vari.price }}"
+                                    value="{{ obj_vari.id }}">
+                                {{ obj_vari }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                {% else %}
+                    <input type="hidden" name="item" value="{{ object.variation_set.first.id }}" />
+                    <h3>
+                        {% if object.variation_set.first.sale_price %}
+                            {{ object.variation_set.first.sale_price }}
+                            <small class='og-price'>{{ object.variation_set.first.price }}</small>
+                        {% else %}
+                            {{ object.variation_set.first.price }}
+                        {% endif %}
+                    </h3>
+                {% endif %}
+
+
+                <input class="form-control" type="number" name="qty" value="1" />
+                <br />
+                <input id="submit-btn" type="submit" class="btn btn-default"
+                       value="Add to Cart" />
+            </form>
+
+
+            <br /><hr />
+            <p>Share<br />
+                <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}">
+                    <i class="fa fa-facebook-square fa-3x"></i>
+                </a>
+                <a href="https://twitter.com/home?status=I'm%20going%20to%20learn%20to%20Code...%20Come%20build%20an%20web%20apsp%20with%20me!%20%23CFE%20and%20@justinmitchel%20{{ request.build_absolute_uri }}">
+                    <i class="fa fa-twitter-square fa-3x"></i>
+                </a>
+            </p><hr />
+
+
+            <h4>Related Products</h4>
+            <div class="row">
+                {% for product in related %}
+                    <div class="col-xs-6">
+                        {% include "products/product_thumbnail.html" with obj=product price="True" %}
+                    </div>
+                    {% cycle "" "</div><div class='row'>" %}
+                {% endfor %}
+            </div>
+            <!-- End Product Sidebar -->
+        </div>
+{% endblock %}
