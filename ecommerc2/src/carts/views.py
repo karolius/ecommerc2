@@ -124,7 +124,7 @@ class CartView(SingleObjectMixin, View):
 
 class CheckoutView(DetailView):
     model = Cart
-    # template_name = ""
+    template_name = "carts/checkout_view.html"
 
     def get_object(self, *args, **kwargs):
         cart_id = self.request.session.get("cart_id")
@@ -139,9 +139,8 @@ class CheckoutView(DetailView):
 
         if not self.request.user.is_authenticated(): # or if is_gues
             context["login_form"] = AuthenticationForm()
-            # next_url
-        elif self.request.user.is_authenticated():
+            context["next_url"] = self.request.build_absolute_uri()
+        else: # self.request.user.is_authenticated():
             user_auth = True
         context["user_auth"] = user_auth
-        print(context)
         return context

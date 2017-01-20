@@ -2,13 +2,13 @@ from django.conf import settings
 from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.contrib import admin
+
+from carts.views import CartView, ItemCountView, CheckoutView
 from newsletter.views import (
     contact,
     home,
 )
 from .views import about
-from carts.views import CartView, ItemCountView, CheckoutView
-
 
 urlpatterns = [
     # Examples:

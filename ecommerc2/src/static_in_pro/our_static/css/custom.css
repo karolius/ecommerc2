@@ -22,3 +22,12 @@
 	margin: 0;
 	display: none;
 }
+.btn-success{
+	background-color: #413F5D;
+	border-color: rgba(61, 23, 129, 0.58);
+}
+.btn-success:hover, .open > .dropdown-toggle.btn-success {
+	color: #2b2a3b;
+	background-color: #ffffff;
+	border-color: rgba(61, 23, 129, 0.58);
+}
