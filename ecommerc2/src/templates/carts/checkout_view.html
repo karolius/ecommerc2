@@ -8,6 +8,11 @@
     {% if not user_auth %}
         <div class="col-sm-6">
             <p class="lead">Continue as Guest</p>
+            <form method="POST" action="" >
+                {% csrf_token %}
+                {{ form|crispy }}
+                <input type="submit" class="btn btn-success" value="Continue as Guest" />
+            </form>
         </div>
         <div class="col-sm-6">
             <p class="lead">Login to Continue</p>
