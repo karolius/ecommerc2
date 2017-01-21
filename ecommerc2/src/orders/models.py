@@ -8,3 +8,21 @@ class UserCheckout(models.Model):
 
     def __str__(self):
         return self.email
+
+
+ADDRESS_TYPE = (
+    ('billing', 'Billing'),
+    ('shipping', 'Shipping'),
+)
+
+
+class UserAddress(models.Model):
+    user = models.ForeignKey(UserCheckout)
+    type = models.CharField(max_length=120, choices=ADDRESS_TYPE)
+    street = models.CharField(max_length=120)
+    city = models.CharField(max_length=120)
+    state = models.CharField(max_length=120)
+    zipcode = models.CharField(max_length=120)
+
+    def __str__(self):
+        return self.street

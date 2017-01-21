@@ -15,8 +15,12 @@ class GuestCheckForm(forms.Form):
 
         if email == email2:
             user_exits = User.objects.filter(email=email).count()
-            print("--------BEDE CZYSCYCUCS", user_exits)
             if user_exits != 0:
                 raise forms.ValidationError("This User already exists. Please login instead.")
             return email2
         raise forms.ValidationError("Please confirm emails are the same.")
+
+
+class AddressForm(forms.Form):
+    billing_address = forms.CharField()
+    shipping_address = forms.CharField()

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load i18n %}
+
+
+{% block content %}
+
+    {% if 1 %}
+        <div class="col-sm-6 col-sm-offset-3">
+            <p class="lead">Please add your address.</p>
+            <form method="POST" action="" >
+                {% csrf_token %}
+                {{ form|crispy }}
+                <input type="submit" class="btn btn-success" value="Submit" />
+            </form>
+    {% endif %}
+{% endblock %}

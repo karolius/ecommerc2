@@ -41,8 +41,8 @@ class CartView(SingleObjectMixin, View):
         else:
             cart = Cart.objects.get(id=cart_id)  # TODO brak else
 
-        if self.request.user.is_authenticated():
-            cart.user = self.request.user
+        if user_is_auth:
+            cart.user = user
             cart.save()
         return cart
 
@@ -82,9 +82,9 @@ class CartView(SingleObjectMixin, View):
 
         if request.is_ajax():
             try:
-                total = cart_item.line_item_total
+                line_total = cart_item.line_item_total
             except:
-                total = None
+                line_total = None
 
             try:
                 subtotal = cart_item.cart.subtotal  # cart.subtotal // shows prev (???)
@@ -110,7 +110,7 @@ class CartView(SingleObjectMixin, View):
                 "deleted": delete_item,
                 "flash_message": flash_message,
                 "item_added": item_added,
-                "line_total": total,
+                "line_total": line_total,
                 "subtotal": subtotal,
                 "tax_total": tax_total,
                 "total": total,
@@ -141,16 +141,23 @@ class CheckoutView(FormMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super(CheckoutView, self).get_context_data(**kwargs)
         user_auth = False
-
         user_checkout_id = self.request.session.get("user_checkout_id")
-        print("------------ ", user_checkout_id)
-        if not self.request.user.is_authenticated() or user_checkout_id is None:
+        user = self.request.user
+        user_is_auth = user.is_authenticated()
+
+        if not user_is_auth or user_checkout_id is None:
             context["login_form"] = AuthenticationForm()
             context["next_url"] = self.request.build_absolute_uri()
-        elif self.request.user.is_authenticated() or user_checkout_id is not None:
+        elif user_is_auth or user_checkout_id is not None:
             user_auth = True
         else:
             pass
+
+        if user_is_auth:
+            user_checkout = UserCheckout.objects.get_or_create(email=user.email)[0]
+            user_checkout.user = user
+            user_checkout.save()
+            self.request.session["user_checkout_id"] = user_checkout.id
 
         context["user_auth"] = user_auth
         context["form"] = self.get_form()

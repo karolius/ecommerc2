@@ -8,6 +8,7 @@ from newsletter.views import (
     contact,
     home,
 )
+from orders.views import AddressSelectFormView
 from .views import about
 
 urlpatterns = [
@@ -22,7 +23,8 @@ urlpatterns = [
     url(r'^categories/', include('products.urls_categories')),
     url(r'^cart/$', CartView.as_view(), name='cart'),
     url(r'^cart/count/$', ItemCountView.as_view(), name='item_count'),
-    url(r'^cart/checkout/$', CheckoutView.as_view(), name='checkout'),
+    url(r'^checkout/$', CheckoutView.as_view(), name='checkout'),
+    url(r'^checkout/address$', AddressSelectFormView.as_view(), name='checkout_address'),
 ]
 
 if settings.DEBUG:
