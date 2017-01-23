@@ -7,7 +7,7 @@ from django.views.generic.detail import SingleObjectMixin, DetailView
 from django.views.generic.edit import FormMixin
 
 from orders.forms import GuestCheckForm
-from orders.models import UserCheckout
+from orders.models import UserCheckout, Order, UserAddress
 from products.models import Variation
 from .models import Cart, CartItem
 
@@ -138,8 +138,8 @@ class CheckoutView(FormMixin, DetailView):
         cart = Cart.objects.get(id=cart_id)
         return cart
 
-    def get_context_data(self, **kwargs):
-        context = super(CheckoutView, self).get_context_data(**kwargs)
+    def get_context_data(self, *args, **kwargs):
+        context = super(CheckoutView, self).get_context_data(*args, **kwargs)
         user_auth = False
         user_checkout_id = self.request.session.get("user_checkout_id")
         user = self.request.user
@@ -177,3 +177,35 @@ class CheckoutView(FormMixin, DetailView):
 
     def get_success_url(self):
         return reverse("checkout")
+
+    def get(self, request, *args, **kwargs):
+        get_data = super(CheckoutView, self).get(request, *args, **kwargs)
+        cart = self.get_object()
+        user_checkout_id = request.session.get("checkout_user_id")
+        if user_checkout_id is not None:
+            user_checkout = UserCheckout.objects.get(id=user_checkout_id)
+            billing_address_id = request.session.get("billing_address_id")
+            shipping_address_id = request.session.get("shipping_address_id")
+
+            if billing_address_id is None or shipping_address_id is None:
+                return redirect("order_address")
+
+            billing_address = UserAddress.objects.get(id=billing_address_id)
+            shipping_address = UserAddress.objects.get(id=shipping_address_id)
+
+            try:
+                new_order_id = request.session["order_id"]
+                new_order = Order.objects.get(id=new_order_id)
+            except:
+                new_order = Order()
+                request.session["order_id"] = new_order.id
+
+            new_order.user = user_checkout
+            new_order.cart = cart
+            new_order.billing_address = billing_address
+            new_order.shipping_address = shipping_address
+            new_order.save()
+            # shipping_total_price
+            # order_total
+
+        return get_data
