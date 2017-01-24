@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django.views.generic import FormView
 
 from .forms import AddressForm
@@ -11,27 +10,28 @@ class AddressSelectFormView(FormView):
 
     def get_form(self, *args, **kwargs):
         form = super(AddressSelectFormView, self).get_form(*args, **kwargs)
-        user = self.request.user
-        email = UserCheckout.objects.filter(user=user).first()
-        # It should work this way...
-        # email = user.email
-        # print("-------user:-----:	", self.request.user)
-        # print("-------EMAIL:-----:	", self.request.user.email)
-        form.fields["billing_address"].queryset = UserAddress.objects.filter(
-            user__email=email,
+        user_checkout_id = self.request.session.get("user_checkout_id")
+        user_checkout = UserCheckout.objects.get(id=user_checkout_id)
+        b_addr = UserAddress.objects.filter(
+            user=user_checkout,
             type="billing",
         )
-        form.fields["shipping_address"].queryset = UserAddress.objects.filter(
-            user__email=email,  # self.request.user.email,
+        s_addr = UserAddress.objects.filter(
+            user=user_checkout,
             type="shipping",
         )
+
+        if b_addr.count() == 0 or s_addr.count() == 0:
+
+        form.fields["billing_address"].queryset = b_addr
+        form.fields["shipping_address"].queryset = s_addr
         return form
 
     def form_valid(self, form, *args, **kwargs):
         billing_address = form.cleaned_data["billing_address"]
         shipping_address = form.cleaned_data["shipping_address"]
-        self.request.session["billing_address"] = billing_address.id
-        self.request.session["shipping_address"] = shipping_address.id
+        self.request.session["billing_address_id"] = billing_address.id
+        self.request.session["shipping_address_id"] = shipping_address.id
         return super(AddressSelectFormView, self).form_valid(form, *args, **kwargs)
 
     def get_success_url(self, *args, **kwargs):

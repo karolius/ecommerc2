@@ -41,7 +41,8 @@ class CartView(SingleObjectMixin, View):
         else:
             cart = Cart.objects.get(id=cart_id)  # TODO brak else
 
-        if user_is_auth:
+        user = self.request.user
+        if user.is_authenticated():
             cart.user = user
             cart.save()
         return cart
@@ -138,6 +139,16 @@ class CheckoutView(FormMixin, DetailView):
         cart = Cart.objects.get(id=cart_id)
         return cart
 
+    def get_order(self, *args, **kwargs):
+        cart = self.get_object()
+        order_id = self.request.session.get("order_id")
+        if order_id is None:
+            order = Order.objects.create(cart=cart)
+            self.request.session["order_id"] = order.id
+        else:
+            order = Order.objects.get(id=order_id)
+        return order
+
     def get_context_data(self, *args, **kwargs):
         context = super(CheckoutView, self).get_context_data(*args, **kwargs)
         user_auth = False
@@ -154,11 +165,14 @@ class CheckoutView(FormMixin, DetailView):
             pass
 
         if user_is_auth:
-            user_checkout = UserCheckout.objects.get_or_create(email=user.email)[0]
-            user_checkout.user = user
-            user_checkout.save()
+            user_checkout, created = UserCheckout.objects.get_or_create(user=user)
             self.request.session["user_checkout_id"] = user_checkout.id
 
+            if created:
+                user_checkout.user = user
+                user_checkout.save()
+
+        context["order"] = self.get_order()
         context["user_auth"] = user_auth
         context["form"] = self.get_form()
         return context
@@ -180,32 +194,20 @@ class CheckoutView(FormMixin, DetailView):
 
     def get(self, request, *args, **kwargs):
         get_data = super(CheckoutView, self).get(request, *args, **kwargs)
-        cart = self.get_object()
-        user_checkout_id = request.session.get("checkout_user_id")
+        user_checkout_id = request.session.get("user_checkout_id")
         if user_checkout_id is not None:
             user_checkout = UserCheckout.objects.get(id=user_checkout_id)
             billing_address_id = request.session.get("billing_address_id")
             shipping_address_id = request.session.get("shipping_address_id")
-
             if billing_address_id is None or shipping_address_id is None:
                 return redirect("order_address")
 
             billing_address = UserAddress.objects.get(id=billing_address_id)
             shipping_address = UserAddress.objects.get(id=shipping_address_id)
 
-            try:
-                new_order_id = request.session["order_id"]
-                new_order = Order.objects.get(id=new_order_id)
-            except:
-                new_order = Order()
-                request.session["order_id"] = new_order.id
-
+            new_order = self.get_order()
             new_order.user = user_checkout
-            new_order.cart = cart
             new_order.billing_address = billing_address
             new_order.shipping_address = shipping_address
             new_order.save()
-            # shipping_total_price
-            # order_total
-
         return get_data
