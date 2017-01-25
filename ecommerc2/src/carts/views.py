@@ -34,12 +34,10 @@ class CartView(SingleObjectMixin, View):
     def get_object(self, *args, **kwargs):
         self.request.session.set_expiry(0)  # as long as u not close browser
         cart_id = self.request.session.get("cart_id")
+
+        cart = Cart.objects.get_or_create(id=cart_id)[0]
         if cart_id is None:
-            cart = Cart()
-            cart.save()
             self.request.session["cart_id"] = cart.id
-        else:
-            cart = Cart.objects.get(id=cart_id)  # TODO brak else
 
         user = self.request.user
         if user.is_authenticated():
@@ -64,8 +62,8 @@ class CartView(SingleObjectMixin, View):
             except:
                 raise Http404
 
-            cart_item, created = CartItem.objects.get_or_create(cart=cart, item=item_instance)
-            if created:
+            cart_item, cart_created = CartItem.objects.get_or_create(cart=cart, item=item_instance)
+            if cart_created:
                 flash_message = "Successfully added to the cart."
                 item_added = True
 
@@ -73,7 +71,7 @@ class CartView(SingleObjectMixin, View):
                 flash_message = "Item removed successfully."
                 cart_item.delete()
             else:
-                if not created:
+                if not cart_created:
                     flash_message = "Quantity has been updated successfully."
                 cart_item.quantity = qty
                 cart_item.save()

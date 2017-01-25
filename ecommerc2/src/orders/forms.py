@@ -33,3 +33,15 @@ class AddressForm(forms.Form):
         widget=forms.RadioSelect,
         empty_label=None,
     )
+
+
+class UserAddressForm(forms.ModelForm):
+    class Meta:
+        model = UserAddress
+        fields = [
+            'type',
+            'street',
+            'city',
+            'state',
+            'zipcode'
+        ]
