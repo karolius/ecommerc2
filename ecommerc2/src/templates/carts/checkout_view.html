@@ -48,7 +48,16 @@
                 <tr><td>Tax: {{ order.cart.tax_total }}</td></tr>
                 <tr><td>Items Total: {{ order.cart.total }}</td></tr>
                 <tr><td>Shipping: {{ order.shipping_total_price }}</td></tr>
-                <tr><td>Total: {{ order.order_total }}</td></tr>
+            <tr><td>Order Total: {{ order.order_total }}</td></tr>
+                <tr><td>
+                    <b>Billing to</b><br />
+                    {{ order.billing_address.get_address }}
+                </td></tr>
+                <tr><td>
+                    <b>Shipping to</b><br />
+                    {{ order.shipping_address.get_address }}
+                </td></tr>
+
             </table>
         </div>
     {% endif %}

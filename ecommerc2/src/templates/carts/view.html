@@ -51,76 +51,94 @@
 
 
 {% block content %}
-    <h3>{{ object }}</h3>
     <div class="row main-content">
         {% if object.cartitem_set.count < 1 %}
             {% include "carts/empty_cart.html" %}
         {% else %}
-            <table class="table">
-                <thead>
-                <tr>
-                    <th>Product name</th>
-                    <th>Price for unit</th>
-                    <th></th>
-                    <th>Quantity</th>
-                    <th>Price</th>
-                    <th></th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for item in object.cartitem_set.all %}
-                    <tr id="item-{{ item.item.id }}">
-                        <td>
-                            {{ item.item.get_title }}
+            <div class="col-sm-8 col-sm-offset-2">
+                <h2>Your cart:</h2>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Product name</th>
+                        <th>Price for unit</th>
+                        <th></th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in object.cartitem_set.all %}
+                        <tr id="item-{{ item.item.id }}">
+                            <td>
+                                {{ item.item.get_title }}
 
-                        </td>
-                        <td>
-                            {{ item.item.get_price }}
-                        </td>
-                        <td> x </td>
-                        <td>
-                            <form method="GET" action=".">
-                                <input type="hidden" name="item" value="{{ item.item.id }}" />
-                                <input class="item-qty" type="number" name="qty"
-                                       value="{{ item.quantity }}" />
-                                <input class="btn-update btn btn-link" type="submit"
-                                       value="Update Item" style="display: none;"/>
-                            </form>
-                        </td>
-                        <td id="item-line-total-{{ item.item.id }}">
-                            {{ item.line_item_total }}
+                            </td>
+                            <td>
+                                {{ item.item.get_price }}
+                            </td>
+                            <td> x </td>
+                            <td>
+                                <form method="GET" action=".">
+                                    <input type="hidden" name="item" value="{{ item.item.id }}" />
+                                    <input class="item-qty" type="number" name="qty"
+                                           value="{{ item.quantity }}" />
+                                    <input class="btn-update btn btn-link" type="submit"
+                                           value="Update Item" style="display: none;"/>
+                                </form>
+                            </td>
+                            <td id="item-line-total-{{ item.item.id }}">
+                                {{ item.line_item_total }}
+                            </td>
+                            <td class="text-right">
+                                <a href="{{ item.remove }}">X</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    <tr>
+                        <td colspan="5" class="text-right">
+                            Subtotal:
                         </td>
                         <td class="text-right">
-                            <a href="{{ item.remove }}">X</a>
+                            <span id="subtotal">{{ object.subtotal }}</span>
                         </td>
                     </tr>
-                {% endfor %}
-                <tr>
-                    <td colspan="4" class="text-right">
-                        Subtotal:
-                    </td>
-                    <td class="text-right">
-                        <span id="subtotal">{{ object.subtotal }}</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="4" class="text-right">
-                        Taxes:
-                    </td>
-                    <td class="text-right">
-                        <span id="tax-total">{{ object.tax_total }}</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="4" class="text-right">
-                        Total price:
-                    </td>
-                    <td class="text-right">
-                        <span id="total">{{ object.total }}</span>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+                    <tr>
+                        <td colspan="5" class="text-right">
+                            Taxes:
+                        </td>
+                        <td class="text-right">
+                            <span id="tax-total">{{ object.tax_total }}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="5" class="text-right">
+                            Total price:
+                        </td>
+                        <td class="text-right">
+                            <span id="total">{{ object.total }}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="5" class="text-right">
+                            Total price:
+                        </td>
+                        <td class="text-right">
+                            <span id="total">{{ object.total }}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="5" class="text-right">
+                            <a href="{% url 'checkout' %}" class="btn btn-default">
+                                Checkout
+                            </a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+
+            </div>
         {% endif %}
     </div>
 {% endblock %}

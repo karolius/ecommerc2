@@ -154,21 +154,23 @@ class CheckoutView(FormMixin, DetailView):
         user = self.request.user
         user_is_auth = user.is_authenticated()
 
-        if not user_is_auth or user_checkout_id is None:
-            context["login_form"] = AuthenticationForm()
-            context["next_url"] = self.request.build_absolute_uri()
-        elif user_is_auth or user_checkout_id is not None:
-            user_auth = True
-        else:
-            pass
-
         if user_is_auth:
+            user_auth = True
             user_checkout, created = UserCheckout.objects.get_or_create(user=user)
             self.request.session["user_checkout_id"] = user_checkout.id
-
             if created:
                 user_checkout.user = user
                 user_checkout.save()
+            else:
+                print("-----DIFF user_checkout: %s      user: %s" % (user_checkout.user, user))
+        elif user_is_auth and user_checkout_id is None:
+            context["login_form"] = AuthenticationForm()
+            context["next_url"] = self.request.build_absolute_uri()
+        else:
+            pass
+
+        if user_checkout_id is not None:
+            user_auth = True
 
         context["order"] = self.get_order()
         context["user_auth"] = user_auth

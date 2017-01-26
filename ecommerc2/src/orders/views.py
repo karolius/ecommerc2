@@ -39,7 +39,6 @@ class AddressSelectFormView(FormView):
 
     def get_addresses(self, *args, **kwargs):
         user_checkout_id = self.request.session.get("user_checkout_id")
-        print("--user_checkout_id---    ", user_checkout_id)
         user_checkout = UserCheckout.objects.get(id=user_checkout_id)
         b_addr = UserAddress.objects.filter(
             user=user_checkout,
