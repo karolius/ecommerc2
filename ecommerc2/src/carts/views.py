@@ -7,7 +7,8 @@ from django.views.generic.detail import SingleObjectMixin, DetailView
 from django.views.generic.edit import FormMixin
 
 from orders.forms import GuestCheckForm
-from orders.models import UserCheckout, Order, UserAddress
+from orders.mixins import CartOrderMixin
+from orders.models import UserCheckout, UserAddress
 from products.models import Variation
 from .models import Cart, CartItem
 
@@ -124,28 +125,16 @@ class CartView(SingleObjectMixin, View):
         return render(request, template, context)
 
 
-class CheckoutView(FormMixin, DetailView):
+class CheckoutView(CartOrderMixin, FormMixin, DetailView):
     model = Cart
     template_name = "carts/checkout_view.html"
     form_class = GuestCheckForm
-    # use success_url = ... or method
 
     def get_object(self, *args, **kwargs):
-        cart_id = self.request.session.get("cart_id")
-        if cart_id is None:
-            return redirect("cart")
-        cart = Cart.objects.get(id=cart_id)
+        cart = self.get_cart()
+        if cart is None:
+            return None
         return cart
-
-    def get_order(self, *args, **kwargs):
-        cart = self.get_object()
-        order_id = self.request.session.get("order_id")
-        if order_id is None:
-            order = Order.objects.create(cart=cart)
-            self.request.session["order_id"] = order.id
-        else:
-            order = Order.objects.get(id=order_id)
-        return order
 
     def get_context_data(self, *args, **kwargs):
         context = super(CheckoutView, self).get_context_data(*args, **kwargs)
@@ -161,9 +150,8 @@ class CheckoutView(FormMixin, DetailView):
             if created:
                 user_checkout.user = user
                 user_checkout.save()
-            else:
-                print("-----DIFF user_checkout: %s      user: %s" % (user_checkout.user, user))
-        elif user_is_auth and user_checkout_id is None:
+
+        elif not user_is_auth and user_checkout_id is None:
             context["login_form"] = AuthenticationForm()
             context["next_url"] = self.request.build_absolute_uri()
         else:
@@ -193,21 +181,31 @@ class CheckoutView(FormMixin, DetailView):
         return reverse("checkout")
 
     def get(self, request, *args, **kwargs):
-        get_data = super(CheckoutView, self).get(request, *args, **kwargs)
+        if self.get_cart() is None:
+            return redirect("cart")
+
         user_checkout_id = request.session.get("user_checkout_id")
         if user_checkout_id is not None:
-            user_checkout = UserCheckout.objects.get(id=user_checkout_id)
-            billing_address_id = request.session.get("billing_address_id")
-            shipping_address_id = request.session.get("shipping_address_id")
-            if billing_address_id is None or shipping_address_id is None:
+            new_order = self.get_order()
+            if new_order.billing_address_id is None or new_order.shipping_address_id is None:
                 return redirect("order_address")
 
-            billing_address = UserAddress.objects.get(id=billing_address_id)
-            shipping_address = UserAddress.objects.get(id=shipping_address_id)
-
-            new_order = self.get_order()
+            user_checkout = UserCheckout.objects.get(id=user_checkout_id)
             new_order.user = user_checkout
-            new_order.billing_address = billing_address
-            new_order.shipping_address = shipping_address
             new_order.save()
+        get_data = super(CheckoutView, self).get(request, *args, **kwargs)
         return get_data
+
+
+class CheckoutFinalView(CartOrderMixin, View):
+    def post(self, request, *args, **kwargs):
+        if request.POST.get("payment_token") == "ABC":
+            order = self.get_order()
+            order.mark_completed()
+            del request.session["cart_id"]
+            del request.session["order_id"]
+
+        return redirect("checkout")
+
+    def get(self, request, *args, **kwargs):
+        return redirect("checkout")

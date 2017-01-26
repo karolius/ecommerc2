@@ -48,7 +48,7 @@
                 <tr><td>Tax: {{ order.cart.tax_total }}</td></tr>
                 <tr><td>Items Total: {{ order.cart.total }}</td></tr>
                 <tr><td>Shipping: {{ order.shipping_total_price }}</td></tr>
-            <tr><td>Order Total: {{ order.order_total }}</td></tr>
+                <tr><td>Order Total: {{ order.order_total }}</td></tr>
                 <tr><td>
                     <b>Billing to</b><br />
                     {{ order.billing_address.get_address }}
@@ -57,7 +57,31 @@
                     <b>Shipping to</b><br />
                     {{ order.shipping_address.get_address }}
                 </td></tr>
-
+                <tr>
+                    <td class="text-center">
+                        <a href="{% url 'order_address' %}" class="btn btn-success">
+                            Change address
+                        </a>
+                        <a href="{% url 'cart' %}" class="btn btn-success">
+                            Your cart
+                        </a>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-center">
+                    <form method="POST" action="{% url 'checkout_final' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="payment_token" value="ABC" />
+                        <p>
+                            <b>
+                                <button class="btn btn-success" type="submit">
+                                    Complite Order
+                                </button>
+                            </b>
+                        </p>
+                    </form>
+                    </td>
+                </tr>
             </table>
         </div>
     {% endif %}
