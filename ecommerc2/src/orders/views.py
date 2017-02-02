@@ -1,11 +1,43 @@
 from django.contrib import messages
+from django.http import Http404
 from django.shortcuts import redirect
-from django.views.generic import CreateView
+from django.views.generic import CreateView, DetailView, ListView
 from django.views.generic import FormView
 
 from .forms import AddressForm, UserAddressForm
-from .mixins import CartOrderMixin
-from .models import UserAddress, UserCheckout
+from .mixins import CartOrderMixin, LoginRequiredMixin
+from .models import (
+    Order,
+    UserAddress,
+    UserCheckout,
+)
+
+
+class OrderDetailView(DetailView):
+    model = Order
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            user_checkout_id = request.session.get("user_checkout_id")
+            user_checkout = UserCheckout.objects.get(id=user_checkout_id)
+        except UserCheckout.DoesNotExist:
+            user_checkout = UserCheckout.objects.get(user=request.user)
+        except:
+            user_checkout = None
+
+        obj = self.get_object()
+        if user_checkout and obj.user == user_checkout:
+            return super(OrderDetailView, self).dispatch(request, *args, **kwargs)
+        raise Http404
+
+
+class OrderListView(LoginRequiredMixin, ListView):
+    queryset = Order.objects.all()
+
+    def get_queryset(self):
+        user_checkout_id = self.request.user.id
+        user_checkout = UserCheckout.objects.get(id=user_checkout_id)
+        return super(OrderListView, self).get_queryset().filter(user=user_checkout)
 
 
 class UserAddressCreateView(CreateView):

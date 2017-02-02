@@ -3,6 +3,19 @@
 {% load i18n %}
 
 
+<script>
+    {% block jquery %}
+        // We generated a client token for you so you can test out this code
+        // immediately. In a production-ready integration, you will need to
+        // generate a client token on your server (see section below).
+        var clientToken = "{{ client_token }}";
+        braintree.setup(clientToken, "dropin", {
+            container: "payment-form"
+        });
+    {% endblock %}
+</script>
+
+
 {% block content %}
 
     {% if not user_auth %}
@@ -33,30 +46,8 @@
         </div>
     {% else %}
         <div class="col-sm-4 col-sm-offset-4 text-center">
-            <p class="lead">Your order</p>
+            {% include "orders/order_summary_short.html" %}
             <table class="table">
-                <tr>
-                    <td>
-                        {{ order.cart.cartitem_set.count }}
-                        Item(s):<br />
-                        {% for item in order.cart.cartitem_set.all %}
-                            <b>{{ item.item.get_title }}</b><br />
-                        {% endfor %}
-                    </td>
-                </tr>
-                <tr><td>Cart Subtotal: {{ order.cart.subtotal }}</td></tr>
-                <tr><td>Tax: {{ order.cart.tax_total }}</td></tr>
-                <tr><td>Items Total: {{ order.cart.total }}</td></tr>
-                <tr><td>Shipping: {{ order.shipping_total_price }}</td></tr>
-                <tr><td>Order Total: {{ order.order_total }}</td></tr>
-                <tr><td>
-                    <b>Billing to</b><br />
-                    {{ order.billing_address.get_address }}
-                </td></tr>
-                <tr><td>
-                    <b>Shipping to</b><br />
-                    {{ order.shipping_address.get_address }}
-                </td></tr>
                 <tr>
                     <td class="text-center">
                         <a href="{% url 'order_address' %}" class="btn btn-success">
@@ -69,17 +60,18 @@
                 </tr>
                 <tr>
                     <td class="text-center">
-                    <form method="POST" action="{% url 'checkout_final' %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="payment_token" value="ABC" />
-                        <p>
-                            <b>
-                                <button class="btn btn-success" type="submit">
-                                    Complite Order
-                                </button>
-                            </b>
-                        </p>
-                    </form>
+                        <form id="checkout" method="POST" action="{% url 'checkout_final' %}">
+                            {% csrf_token %}
+                            {# <input type="hidden" name="payment_token" value="ABC" /> #}
+                            <div id="payment-form"></div>
+                            <p>
+                                <b>
+                                    <button class="btn btn-success" type="submit">
+                                        Complite Order
+                                    </button>
+                                </b>
+                            </p>
+                        </form>
                     </td>
                 </tr>
             </table>

@@ -13,7 +13,12 @@ from newsletter.views import (
     contact,
     home,
 )
-from orders.views import AddressSelectFormView, UserAddressCreateView
+from orders.views import (
+    AddressSelectFormView,
+OrderDetailView,
+    OrderListView,
+    UserAddressCreateView,
+)
 from .views import about
 
 urlpatterns = [
@@ -26,6 +31,9 @@ urlpatterns = [
 
     url(r'^products/', include('products.urls')),
     url(r'^categories/', include('products.urls_categories')),
+
+    url(r'^orders/$', OrderListView.as_view(), name='orders'),
+    url(r'^orders/(?P<pk>\d+)/$', OrderDetailView.as_view(), name='order_detail'),
 
     url(r'^cart/$', CartView.as_view(), name='cart'),
     url(r'^cart/count/$', ItemCountView.as_view(), name='item_count'),

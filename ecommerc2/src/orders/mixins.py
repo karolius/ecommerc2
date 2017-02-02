@@ -1,5 +1,14 @@
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+
 from .models import Order
 from carts.models import Cart
+
+
+class LoginRequiredMixin(object):
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        return super(LoginRequiredMixin, self).dispatch(request, *args, **kwargs)
 
 
 class CartOrderMixin(object):
@@ -19,6 +28,7 @@ class CartOrderMixin(object):
 
         order_id = self.request.session.get("order_id")
         if order_id is None:
+            print("CARDT ----- ", cart)
             order = Order.objects.create(cart=cart)
             self.request.session["order_id"] = order.id
         else:
