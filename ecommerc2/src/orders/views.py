@@ -17,15 +17,19 @@ class OrderDetailView(DetailView):
     model = Order
 
     def dispatch(self, request, *args, **kwargs):
-        try:
-            user_checkout_id = request.session.get("user_checkout_id")
-            user_checkout = UserCheckout.objects.get(id=user_checkout_id)
-        except UserCheckout.DoesNotExist:
-            user_checkout = UserCheckout.objects.get(user=request.user)
-        except:
-            user_checkout = None
+        user = request.user
+        if user.is_authenticated(): # in case: in session is someone else, not loggeed user
+            user_checkout = UserCheckout.objects.get(user=user)
+        else:
+            try:
+                user_checkout_id = request.session.get("user_checkout_id")
+                user_checkout = UserCheckout.objects.get(id=user_checkout_id)
+            except:
+                user_checkout = None
 
+        print("----user_checkout    ", user_checkout)
         obj = self.get_object()
+        print("----obj.user    ", obj.user)
         if user_checkout and obj.user == user_checkout:
             return super(OrderDetailView, self).dispatch(request, *args, **kwargs)
         raise Http404
@@ -71,6 +75,8 @@ class AddressSelectFormView(CartOrderMixin, FormView):
             return super(AddressSelectFormView, self).dispatch(*args, **kwargs)
 
     def get_addresses(self, *args, **kwargs):
+        user = 
+        if
         user_checkout_id = self.request.session.get("user_checkout_id")
         user_checkout = UserCheckout.objects.get(id=user_checkout_id)
         b_addr = UserAddress.objects.filter(

@@ -2,10 +2,25 @@
 
 
 {% block content %}
-    {% for obj in object_list %}
-        <li>
-            {{ obj.id }}
-            {{ obj.cart.items.all }}
-        </li>
-    {% endfor %}
+    <div class="col-sm-6 col-sm-offset-3">
+        <h2>Your Orders:</h2>
+        <table class="table">
+            {% for obj in object_list %}
+                <tr>
+                    <td>{{ obj.id }}</td>
+                    <td>
+                        <a href="{{ obj.get_absolute_url }}">
+                            View #{{ obj.get_absolute_url }}
+                            {% if obj.order_id %}
+                                {{ obj.order_id  }}
+                            {% else %}
+                                {{ obj.id }}
+                            {% endif %}
+                        </a>
+                    </td>
+                    <td>Item Count: {{ obj.cart.items.count }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
 {% endblock %}

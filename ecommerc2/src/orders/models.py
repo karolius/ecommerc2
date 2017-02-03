@@ -2,6 +2,7 @@ from decimal import Decimal
 
 import braintree
 from django.conf import settings
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models.signals import pre_save, post_save
 
@@ -99,8 +100,9 @@ class Order (models.Model):
         self.status = "paid"
         if order_id and not self.order_id:
             self.order_id = order_id
-        self.save()
 
+    def get_absolute_url(self):
+        return reverse("order_detail", kwargs={"pk": self.pk})
 
 def order_pre_save(sender, instance, *args, **kwargs):
     total_shipping_price = Decimal(instance.shipping_total_price)

@@ -47,9 +47,12 @@ class CartView(SingleObjectMixin, View):
         self.request.session.set_expiry(0)  # as long as u not close browser
         cart_id = self.request.session.get("cart_id")
 
+        user = self.request.user
         cart = Cart.objects.get_or_create(id=cart_id)[0]
         if cart_id is None:
             self.request.session["cart_id"] = cart.id
+        # elif user.is_authenticated() and cart.user != request.user:
+        #     cart = Cart.objects.create(user=user)
 
         user = self.request.user
         if user.is_authenticated():
@@ -201,6 +204,7 @@ class CheckoutView(CartOrderMixin, FormMixin, DetailView):
 
         user_checkout_id = request.session.get("user_checkout_id")
         if user_checkout_id is not None:
+            # TODO zalogowanie nie urywa usera niezalogowanego (zly mail!!)
             new_order = self.get_order()
             if new_order.billing_address_id is None or new_order.shipping_address_id is None:
                 return redirect("order_address")
