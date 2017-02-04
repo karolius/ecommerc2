@@ -27,9 +27,7 @@ class OrderDetailView(DetailView):
             except:
                 user_checkout = None
 
-        print("----user_checkout    ", user_checkout)
         obj = self.get_object()
-        print("----obj.user    ", obj.user)
         if user_checkout and obj.user == user_checkout:
             return super(OrderDetailView, self).dispatch(request, *args, **kwargs)
         raise Http404
@@ -75,8 +73,6 @@ class AddressSelectFormView(CartOrderMixin, FormView):
             return super(AddressSelectFormView, self).dispatch(*args, **kwargs)
 
     def get_addresses(self, *args, **kwargs):
-        user = 
-        if
         user_checkout_id = self.request.session.get("user_checkout_id")
         user_checkout = UserCheckout.objects.get(id=user_checkout_id)
         b_addr = UserAddress.objects.filter(

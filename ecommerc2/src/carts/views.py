@@ -47,12 +47,9 @@ class CartView(SingleObjectMixin, View):
         self.request.session.set_expiry(0)  # as long as u not close browser
         cart_id = self.request.session.get("cart_id")
 
-        user = self.request.user
         cart = Cart.objects.get_or_create(id=cart_id)[0]
         if cart_id is None:
             self.request.session["cart_id"] = cart.id
-        # elif user.is_authenticated() and cart.user != request.user:
-        #     cart = Cart.objects.create(user=user)
 
         user = self.request.user
         if user.is_authenticated():
@@ -158,14 +155,9 @@ class CheckoutView(CartOrderMixin, FormMixin, DetailView):
         user_is_auth = user.is_authenticated()
 
         if user_is_auth:
-            user_auth = True
-            user_checkout, created = UserCheckout.objects.get_or_create(user=user)
-            self.request.session["user_checkout_id"] = user_checkout.id
+            user_checkout = UserCheckout.objects.get(user=user)
             context["client_token"] = user_checkout.get_client_token()
-            if created:
-                user_checkout.user = user
-                user_checkout.save()
-
+            user_auth = True
         elif not user_is_auth and user_checkout_id is None:
             context["login_form"] = AuthenticationForm()
             context["next_url"] = self.request.build_absolute_uri()
@@ -202,9 +194,18 @@ class CheckoutView(CartOrderMixin, FormMixin, DetailView):
         if self.get_cart() is None:
             return redirect("cart")
 
-        user_checkout_id = request.session.get("user_checkout_id")
+        user = self.request.user
+        print("user w GET   ", user)
+        if user.is_authenticated():  # user id is not inherited from prev session
+            user_checkout, created = UserCheckout.objects.get_or_create(user=user)
+            print("user_checkout w GET   ", user_checkout, user_checkout.id)
+            if created:
+                user_checkout.user = user
+                user_checkout.save()
+            self.request.session["user_checkout_id"] = user_checkout.id
+        user_checkout_id = self.request.session.get("user_checkout_id")
+
         if user_checkout_id is not None:
-            # TODO zalogowanie nie urywa usera niezalogowanego (zly mail!!)
             new_order = self.get_order()
             if new_order.billing_address_id is None or new_order.shipping_address_id is None:
                 return redirect("order_address")
