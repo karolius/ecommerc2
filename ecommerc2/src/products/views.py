@@ -1,3 +1,4 @@
+from django.core.exceptions import ImproperlyConfigured
 from django.contrib import messages
 from django.db.models import Q
 from django.http import Http404
@@ -5,11 +6,11 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
-from .forms import VariationInventoryFormSet
+from .forms import ProductFilterForm, VariationInventoryFormSet
 from .mixins import LoginRequiredMixin, StaffRequiredMixin
 from .models import Category, Product, Variation
 
-from pprint import pprint
+from django_filters import FilterSet, CharFilter, NumberFilter
 
 
 class CategoryDetailView(DetailView):
@@ -76,14 +77,60 @@ class VariationListView(StaffRequiredMixin, ListView):
         raise Http404
 
 
-class ProductListView(ListView):
+class ProductFilter(FilterSet):
+    title = CharFilter(name='title', lookup_expr='icontains', distinct=True)
+    category = CharFilter(name='categories__title', lookup_expr='icontains', distinct=True)
+    category_id = CharFilter(name='categories__id', lookup_expr='icontains', distinct=True)
+    min_price = NumberFilter(name='variation__price', lookup_expr='gte', distinct=True)  # (some_price_gte=some_query)
+    max_price = NumberFilter(name='variation__price', lookup_expr='lte', distinct=True)
+
+    class Meta:
+        model = Product
+        fields = [
+            'min_price',
+            'max_price',
+            'category',
+            'title',
+            'description',
+        ]
+
+
+class FilterMixin(object):
+    filter_class = None
+    search_ordering_param = "ordering"
+
+    def get_queryset(self, *args, **kwargs):
+        try:
+            qs = super(FilterMixin, self).get_queryset(*args, **kwargs)
+            return qs
+        except:
+            raise ImproperlyConfigured("You must have a queryset in order to use the FilterMixin")
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(FilterMixin, self).get_context_data(*args, **kwargs)
+        qs = self.get_queryset()
+
+        ordering = self.request.GET.get(self.search_ordering_param)
+        if ordering:
+            qs = qs.order_by(ordering)
+
+        filter_class = self.filter_class
+        if filter_class:
+            f = filter_class(self.request.GET, queryset=qs)
+            context["object_list"] = f.qs
+        return context
+
+
+class ProductListView(FilterMixin, ListView):
     model = Product
     queryset = Product.objects.all()
+    filter_class = ProductFilter
 
     def get_context_data(self, **kwargs):
         context = super(ProductListView, self).get_context_data(**kwargs)
         context["now"] = timezone.now
         context["query"] = self.request.GET.get("q")
+        context["filter_form"] = ProductFilterForm(data=self.request.GET or None)
         return context
 
     def get_queryset(self, *args, **kwargs):

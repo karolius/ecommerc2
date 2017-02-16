@@ -20,7 +20,7 @@
                 <li><a href="{% url 'category_list' %}">Categories</a></li>
                 <form class="navbar-form navbar-left" role="search" method="GET" action="{% url 'product_list' %}">
                     <div class="form-group">
-                        <input type="text" class="form-control" placeholder="Search" name="q" {% if query %}value="{{ query }}"{% endif %}>
+                        <input type="text" class="form-control" placeholder="Search" name="q" {% if query %}value="{{ request.GET.q }}"{% endif %}>
                     </div>
                     <button class="btn btn-default" type="submit">Submit</button>
                 </form>
